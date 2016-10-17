@@ -135,8 +135,15 @@ class Main extends egret.DisplayObjectContainer {
         var chara:Character = new Character();
         var distance:number = 0;
         var timer:egret.Timer;
+        chara.x = 300;
+        chara.y = 600;
         this.addChild(chara);
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent):void{
+            if(e.localX<chara.x){
+                chara.skewY = 180;
+            }else{
+                chara.skewY = 0;
+            }
             distance = calDistance(chara.x,chara.y,e.localX,e.localY);
             timer = new egret.Timer(distance*4,1);
             timer.addEventListener(egret.TimerEvent.TIMER,function():void{
@@ -198,19 +205,13 @@ class Character extends StateMachine implements Idle,Move {
     }
 
     private initMovieClip():void {
-        /*** 本示例关键代码段开始 ***/
-        //alert("movieclip");
-        //this._mcData = RES.getRes("animation.json");
-        //this._mcTexture = RES.getRes("animation.png");
+
         var mcDataFactory = new egret.MovieClipDataFactory(this._mcData, this._mcTexture);
         this.role= new egret.MovieClip(mcDataFactory.generateMovieClipData("20150422144640_7544"));
         this.role.anchorOffsetX = this.role.width / 2;
         this.role.anchorOffsetY = this.role.height*0.95;
         this.role.skewY = 180;
         this.addChild(this.role);
-        //role.gotoAndPlay(1, 3);
-        this.role.x = 0;
-        this.role.y = 0;
         
         this.Polling(this.currentState);
         
