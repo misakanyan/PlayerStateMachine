@@ -136,7 +136,7 @@ class Main extends egret.DisplayObjectContainer {
         var distance:number = 0;
         var timer:egret.Timer;
         chara.x = 300;
-        chara.y = 600;
+        chara.y = 650;
         this.addChild(chara);
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent):void{
             if(e.localX<chara.x){

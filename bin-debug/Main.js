@@ -116,7 +116,7 @@ var Main = (function (_super) {
         var distance = 0;
         var timer;
         chara.x = 300;
-        chara.y = 600;
+        chara.y = 650;
         this.addChild(chara);
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
             if (e.localX < chara.x) {
