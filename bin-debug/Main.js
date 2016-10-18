@@ -107,32 +107,22 @@ var Main = (function (_super) {
         var stageH = this.stage.stageHeight;
         sky.width = stageW;
         sky.height = stageH;
+        //计算距离以确保移动速度相同
         var calDistance = function (beginx, beginy, endx, endy) {
             var vdis = Math.abs(beginx - endx);
             var hdis = Math.abs(beginy - endy);
             return Math.sqrt(vdis * vdis + hdis * hdis);
         };
-        var chara = new Character();
+        //创建角色
+        var chara = new Character(this);
         var distance = 0;
-        var timer;
-        chara.x = 300;
-        chara.y = 650;
-        this.addChild(chara);
+        chara.idle();
+        //添加点击监听
         this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e) {
-            if (e.localX < chara.x) {
-                chara.skewY = 180;
+            if (e.localY > this.stage.stageHeight * 0.6) {
+                distance = calDistance(chara.x, chara.y, e.localX, e.localY);
+                chara.move(e.localX, e.localY, this.distance);
             }
-            else {
-                chara.skewY = 0;
-            }
-            distance = calDistance(chara.x, chara.y, e.localX, e.localY);
-            timer = new egret.Timer(distance * 4, 1);
-            timer.addEventListener(egret.TimerEvent.TIMER, function () {
-                chara.Transition("STATE_IDLE");
-            }, this);
-            timer.start();
-            chara.Transition("STATE_MOVEMENT");
-            egret.Tween.get(chara).to({ x: e.localX, y: e.localY }, distance * 4, egret.Ease.sineInOut);
         }, this);
     };
     /**
@@ -148,91 +138,131 @@ var Main = (function (_super) {
     return Main;
 }(egret.DisplayObjectContainer));
 egret.registerClass(Main,'Main');
-var StateMachine = (function (_super) {
-    __extends(StateMachine, _super);
+//状态机
+var StateMachine = (function () {
     function StateMachine() {
-        _super.apply(this, arguments);
-        this.idle = "STATE_IDLE";
-        this.move = "STATE_MOVEMENT";
     }
     var d = __define,c=StateMachine,p=c.prototype;
+    //设置状态
+    p.setState = function (e) {
+        if (this.currentState != null) {
+            this.currentState.onExit();
+        }
+        this.currentState = e;
+        e.onEnter();
+    };
     return StateMachine;
-}(egret.DisplayObjectContainer));
+}());
 egret.registerClass(StateMachine,'StateMachine');
+var CharacterState = (function (_super) {
+    __extends(CharacterState, _super);
+    function CharacterState(character) {
+        _super.call(this);
+        this._character = character;
+    }
+    var d = __define,c=CharacterState,p=c.prototype;
+    p.onEnter = function () { };
+    p.onExit = function () { };
+    return CharacterState;
+}(StateMachine));
+egret.registerClass(CharacterState,'CharacterState');
+var CharacterIdleState = (function (_super) {
+    __extends(CharacterIdleState, _super);
+    function CharacterIdleState() {
+        _super.apply(this, arguments);
+    }
+    var d = __define,c=CharacterIdleState,p=c.prototype;
+    //进入时设置Character类的变量
+    p.onEnter = function () {
+        this._character._ifidle = true;
+    };
+    //离开时同理
+    p.onExit = function () {
+        this._character._ifidle = false;
+    };
+    return CharacterIdleState;
+}(CharacterState));
+egret.registerClass(CharacterIdleState,'CharacterIdleState');
+var CharacterMoveState = (function (_super) {
+    __extends(CharacterMoveState, _super);
+    function CharacterMoveState() {
+        _super.apply(this, arguments);
+    }
+    var d = __define,c=CharacterMoveState,p=c.prototype;
+    p.onEnter = function () {
+        this._character._ifmove = true;
+    };
+    p.onExit = function () {
+        this._character._ifmove = false;
+    };
+    return CharacterMoveState;
+}(CharacterState));
+egret.registerClass(CharacterMoveState,'CharacterMoveState');
 var Character = (function (_super) {
     __extends(Character, _super);
-    function Character() {
+    function Character(main) {
         _super.call(this);
-        this.currentState = this.idle;
-        this.load(this.initMovieClip);
-        //alert("constructor");
+        this._idleState = new CharacterIdleState(this);
+        this._moveState = new CharacterMoveState(this);
+        this._main = main;
+        this._body = new egret.Bitmap;
+        this._body.texture = RES.getRes("1_png");
+        this._main.addChild(this._body);
+        this._body.anchorOffsetX = this._body.width / 3.5;
+        this._body.anchorOffsetY = this._body.width * 0.95;
+        this._stateMachine = new StateMachine();
+        this._body.x = this._main.stage.stageWidth * 0.15;
+        this._body.y = this._main.stage.stageHeight * 0.9;
+        this._ifidle = true;
+        this._ifmove = false;
     }
     var d = __define,c=Character,p=c.prototype;
-    p.initMovieClip = function () {
-        var mcDataFactory = new egret.MovieClipDataFactory(this._mcData, this._mcTexture);
-        this.role = new egret.MovieClip(mcDataFactory.generateMovieClipData("20150422144640_7544"));
-        this.role.anchorOffsetX = this.role.width / 2;
-        this.role.anchorOffsetY = this.role.height * 0.95;
-        this.role.skewY = 180;
-        this.addChild(this.role);
-        this.Polling(this.currentState);
-    };
-    p.load = function (callback) {
-        var count = 0;
-        var self = this;
-        var check = function () {
-            count++;
-            if (count == 2) {
-                callback.call(self);
+    p.move = function (targetX, targetY, distance) {
+        //中止缓动动画，达到实现运动中更换目标点的目的
+        egret.Tween.removeTweens(this._body);
+        //触发状态机
+        this._stateMachine.setState(this._moveState);
+        //如果状态机将_ifwalk变量调整为true,则进入运动状态
+        if (this._ifmove) {
+            console.log("move");
+            if (targetX > this._body.x) {
+                this._body.skewY = 0;
             }
-        };
-        var loader = new egret.URLLoader();
-        loader.addEventListener(egret.Event.COMPLETE, function loadOver(e) {
-            var loader = e.currentTarget;
-            this._mcTexture = loader.data;
-            check();
-        }, this);
-        loader.dataFormat = egret.URLLoaderDataFormat.TEXTURE;
-        var request = new egret.URLRequest("resource/assets/mc/animation.png");
-        loader.load(request);
-        var loader = new egret.URLLoader();
-        loader.addEventListener(egret.Event.COMPLETE, function loadOver(e) {
-            var loader = e.currentTarget;
-            this._mcData = JSON.parse(loader.data);
-            check();
-        }, this);
-        loader.dataFormat = egret.URLLoaderDataFormat.TEXT;
-        var request = new egret.URLRequest("resource/assets/mc/animation.json");
-        loader.load(request);
-    };
-    p.Idle = function () {
-        console.log("idle");
-        this.role.gotoAndStop(11);
-    };
-    p.Move = function () {
-        console.log("move");
-        this.role.gotoAndPlay(1);
-        this.role.addEventListener(egret.Event.COMPLETE, function (e) {
-            this.role.gotoAndPlay(1);
-        }, this);
-    };
-    p.Transition = function (target) {
-        this.currentState = target;
-        this.Polling(this.currentState);
-    };
-    p.Polling = function (cur) {
-        switch (this.currentState) {
-            case "STATE_IDLE":
-                this.Idle();
-                break;
-            case "STATE_MOVEMENT":
-                this.Move();
-                break;
-            default:
-                break;
+            else {
+                this._body.skewY = 180;
+            }
+            this.startMove();
+            egret.Tween.get(this._body).to({ x: targetX, y: targetY }, 2000, egret.Ease.sineInOut).call(function () { this.idle(); }, this);
         }
     };
+    p.idle = function () {
+        this._stateMachine.setState(this._idleState);
+        //如果状态机将_ifidle变量调整为true,则进入停止状态
+        if (this._ifidle) {
+            console.log("idle");
+            this.startidle();
+        }
+    };
+    //播放运动动画
+    p.startMove = function () {
+        var _this = this;
+        var list = ["1_png", "2_png", "3_png", "4_png", "5_png", "6_png", "7_png", "8_png", "9_png", "10_png", "11_png", "12_png", "13_png", "14_png", "15_png", "16_png", "17_png", "18_png", "19_png", "20_png", "21_png", "22_png", "23_png", "24_png", "25_png", "26_png"];
+        var count = -1;
+        //循环执行
+        egret.Ticker.getInstance().register(function () {
+            if (_this._ifmove) {
+                count = count + 0.5;
+                if (count >= list.length) {
+                    count = 0;
+                }
+                _this._body.texture = RES.getRes(list[Math.floor(count)]);
+            }
+        }, this);
+    };
+    p.startidle = function () {
+        this._body.texture = RES.getRes("1_png");
+    };
     return Character;
-}(StateMachine));
-egret.registerClass(Character,'Character',["Idle","Move"]);
+}(egret.DisplayObjectContainer));
+egret.registerClass(Character,'Character');
 //# sourceMappingURL=Main.js.map

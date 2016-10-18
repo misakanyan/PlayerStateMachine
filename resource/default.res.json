@@ -1,7 +1,7 @@
 {
 	"groups": [
 		{
-			"keys": "bg_jpg,egret_icon_png,description_json,animation_json",
+			"keys": "bg_jpg,egret_icon_png,description_json,animation_json,1_png,2_png,3_png,4_png,5_png,6_png,7_png,8_png,9_png,10_png,11_png,12_png,13_png,14_png,15_png,16_png,17_png,18_png,19_png,20_png,21_png,22_png,23_png,24_png,25_png,26_png",
 			"name": "preload"
 		}
 	],
@@ -25,6 +25,136 @@
 			"name": "animation_json",
 			"type": "json",
 			"url": "assets/mc/animation.json"
+		},
+		{
+			"name": "1_png",
+			"type": "image",
+			"url": "assets/1.png"
+		},
+		{
+			"name": "2_png",
+			"type": "image",
+			"url": "assets/2.png"
+		},
+		{
+			"name": "3_png",
+			"type": "image",
+			"url": "assets/3.png"
+		},
+		{
+			"name": "4_png",
+			"type": "image",
+			"url": "assets/4.png"
+		},
+		{
+			"name": "5_png",
+			"type": "image",
+			"url": "assets/5.png"
+		},
+		{
+			"name": "6_png",
+			"type": "image",
+			"url": "assets/6.png"
+		},
+		{
+			"name": "7_png",
+			"type": "image",
+			"url": "assets/7.png"
+		},
+		{
+			"name": "8_png",
+			"type": "image",
+			"url": "assets/8.png"
+		},
+		{
+			"name": "9_png",
+			"type": "image",
+			"url": "assets/9.png"
+		},
+		{
+			"name": "10_png",
+			"type": "image",
+			"url": "assets/10.png"
+		},
+		{
+			"name": "11_png",
+			"type": "image",
+			"url": "assets/11.png"
+		},
+		{
+			"name": "12_png",
+			"type": "image",
+			"url": "assets/12.png"
+		},
+		{
+			"name": "13_png",
+			"type": "image",
+			"url": "assets/13.png"
+		},
+		{
+			"name": "14_png",
+			"type": "image",
+			"url": "assets/14.png"
+		},
+		{
+			"name": "15_png",
+			"type": "image",
+			"url": "assets/15.png"
+		},
+		{
+			"name": "16_png",
+			"type": "image",
+			"url": "assets/16.png"
+		},
+		{
+			"name": "17_png",
+			"type": "image",
+			"url": "assets/17.png"
+		},
+		{
+			"name": "18_png",
+			"type": "image",
+			"url": "assets/18.png"
+		},
+		{
+			"name": "19_png",
+			"type": "image",
+			"url": "assets/19.png"
+		},
+		{
+			"name": "20_png",
+			"type": "image",
+			"url": "assets/20.png"
+		},
+		{
+			"name": "21_png",
+			"type": "image",
+			"url": "assets/21.png"
+		},
+		{
+			"name": "22_png",
+			"type": "image",
+			"url": "assets/22.png"
+		},
+		{
+			"name": "23_png",
+			"type": "image",
+			"url": "assets/23.png"
+		},
+		{
+			"name": "24_png",
+			"type": "image",
+			"url": "assets/24.png"
+		},
+		{
+			"name": "25_png",
+			"type": "image",
+			"url": "assets/25.png"
+		},
+		{
+			"name": "26_png",
+			"type": "image",
+			"url": "assets/26.png"
 		}
 	]
 }

@@ -33,14 +33,14 @@ class Main extends egret.DisplayObjectContainer {
      * 加载进度界面
      * Process interface loading
      */
-    private loadingView:LoadingUI;
+    private loadingView: LoadingUI;
 
     public constructor() {
         super();
         this.addEventListener(egret.Event.ADDED_TO_STAGE, this.onAddToStage, this);
     }
 
-    private onAddToStage(event:egret.Event) {
+    private onAddToStage(event: egret.Event) {
         //设置加载进度界面
         //Config to load process interface
         this.loadingView = new LoadingUI();
@@ -56,7 +56,7 @@ class Main extends egret.DisplayObjectContainer {
      * 配置文件加载完成,开始预加载preload资源组。
      * configuration file loading is completed, start to pre-load the preload resource group
      */
-    private onConfigComplete(event:RES.ResourceEvent):void {
+    private onConfigComplete(event: RES.ResourceEvent): void {
         RES.removeEventListener(RES.ResourceEvent.CONFIG_COMPLETE, this.onConfigComplete, this);
         RES.addEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
         RES.addEventListener(RES.ResourceEvent.GROUP_LOAD_ERROR, this.onResourceLoadError, this);
@@ -69,7 +69,7 @@ class Main extends egret.DisplayObjectContainer {
      * preload资源组加载完成
      * Preload resource group is loaded
      */
-    private onResourceLoadComplete(event:RES.ResourceEvent):void {
+    private onResourceLoadComplete(event: RES.ResourceEvent): void {
         if (event.groupName == "preload") {
             this.stage.removeChild(this.loadingView);
             RES.removeEventListener(RES.ResourceEvent.GROUP_COMPLETE, this.onResourceLoadComplete, this);
@@ -84,7 +84,7 @@ class Main extends egret.DisplayObjectContainer {
      * 资源组加载出错
      *  The resource group loading failed
      */
-    private onItemLoadError(event:RES.ResourceEvent):void {
+    private onItemLoadError(event: RES.ResourceEvent): void {
         console.warn("Url:" + event.resItem.url + " has failed to load");
     }
 
@@ -92,7 +92,7 @@ class Main extends egret.DisplayObjectContainer {
      * 资源组加载出错
      *  The resource group loading failed
      */
-    private onResourceLoadError(event:RES.ResourceEvent):void {
+    private onResourceLoadError(event: RES.ResourceEvent): void {
         //TODO
         console.warn("Group:" + event.groupName + " has failed to load");
         //忽略加载失败的项目
@@ -104,55 +104,45 @@ class Main extends egret.DisplayObjectContainer {
      * preload资源组加载进度
      * Loading process of preload resource group
      */
-    private onResourceProgress(event:RES.ResourceEvent):void {
+    private onResourceProgress(event: RES.ResourceEvent): void {
         if (event.groupName == "preload") {
             this.loadingView.setProgress(event.itemsLoaded, event.itemsTotal);
         }
     }
 
-    private textfield:egret.TextField;
+    private textfield: egret.TextField;
 
     /**
      * 创建游戏场景
      * Create a game scene
      */
-    private createGameScene():void {
-        var sky:egret.Bitmap = this.createBitmapByName("bg_jpg");
+    private createGameScene(): void {
+        var sky: egret.Bitmap = this.createBitmapByName("bg_jpg");
         this.addChild(sky);
-        var stageW:number = this.stage.stageWidth;
-        var stageH:number = this.stage.stageHeight;
+        var stageW: number = this.stage.stageWidth;
+        var stageH: number = this.stage.stageHeight;
         sky.width = stageW;
         sky.height = stageH;
 
-
-        
-        var calDistance:Function = function(beginx:number,beginy:number,endx:number,endy:number){
-            var vdis =  Math.abs(beginx-endx);
-            var hdis =  Math.abs(beginy-endy);
-            return Math.sqrt(vdis*vdis+hdis*hdis);
+        //计算距离以确保移动速度相同
+        var calDistance: Function = function (beginx: number, beginy: number, endx: number, endy: number) {
+            var vdis = Math.abs(beginx - endx);
+            var hdis = Math.abs(beginy - endy);
+            return Math.sqrt(vdis * vdis + hdis * hdis);
         }
 
-        var chara:Character = new Character();
-        var distance:number = 0;
-        var timer:egret.Timer;
-        chara.x = 300;
-        chara.y = 650;
-        this.addChild(chara);
-        this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP,function(e:egret.TouchEvent):void{
-            if(e.localX<chara.x){
-                chara.skewY = 180;
-            }else{
-                chara.skewY = 0;
+        //创建角色
+        var chara: Character = new Character(this);
+        var distance: number = 0;
+        chara.idle();
+
+        //添加点击监听
+        this.stage.addEventListener(egret.TouchEvent.TOUCH_TAP, function (e: egret.TouchEvent): void {
+            if (e.localY > this.stage.stageHeight * 0.6) {
+                distance = calDistance(chara.x, chara.y, e.localX, e.localY);
+                chara.move(e.localX, e.localY, this.distance);
             }
-            distance = calDistance(chara.x,chara.y,e.localX,e.localY);
-            timer = new egret.Timer(distance*4,1);
-            timer.addEventListener(egret.TimerEvent.TIMER,function():void{
-            chara.Transition("STATE_IDLE");
-        },this)
-            timer.start();
-            chara.Transition("STATE_MOVEMENT");
-            egret.Tween.get(chara).to({x:e.localX,y:e.localY},distance*4,egret.Ease.sineInOut);
-        },this);
+        }, this);
 
     }
 
@@ -160,128 +150,160 @@ class Main extends egret.DisplayObjectContainer {
      * 根据name关键字创建一个Bitmap对象。name属性请参考resources/resource.json配置文件的内容。
      * Create a Bitmap object according to name keyword.As for the property of name please refer to the configuration file of resources/resource.json.
      */
-    private createBitmapByName(name:string):egret.Bitmap {
+    private createBitmapByName(name: string): egret.Bitmap {
         var result = new egret.Bitmap();
-        var texture:egret.Texture = RES.getRes(name);
+        var texture: egret.Texture = RES.getRes(name);
         result.texture = texture;
         return result;
     }
 
 }
 
+//状态机
+class StateMachine {
+    currentState: state;
 
-abstract class StateMachine extends egret.DisplayObjectContainer{
-    public idle:String = "STATE_IDLE";
-    public move:String = "STATE_MOVEMENT";
-
-    //private currentState:String = this.idle;
-    
-    //public transition(target:String):void {
-        //this.currentState = target;
-    //}
+    //设置状态
+    setState(e: state) {
+        if (this.currentState != null) {
+            this.currentState.onExit();
+        }
+        this.currentState = e;
+        e.onEnter();
+    }
 }
 
-interface Idle {
-    Idle():void;
+interface state {
+    onEnter(): void;
+    onExit(): void;
 }
 
-interface Move{
-    Move():void;
-}
+class CharacterState extends StateMachine {
 
-class Character extends StateMachine implements Idle,Move {
-    
-    private _mcData:any;
-    private _mcTexture:egret.Texture;
+    //为了下面设置Character类的变量
+    _character: Character;
 
-    private currentState:String = this.idle;
-
-    private role:egret.MovieClip;
-
-    constructor(){
+    constructor(character: Character) {
         super();
-        this.load(this.initMovieClip);
-        //alert("constructor");
+        this._character = character;
     }
 
-    private initMovieClip():void {
+    onEnter() { }
+    onExit() { }
 
-        var mcDataFactory = new egret.MovieClipDataFactory(this._mcData, this._mcTexture);
-        this.role= new egret.MovieClip(mcDataFactory.generateMovieClipData("20150422144640_7544"));
-        this.role.anchorOffsetX = this.role.width / 2;
-        this.role.anchorOffsetY = this.role.height*0.95;
-        this.role.skewY = 180;
-        this.addChild(this.role);
-        
-        this.Polling(this.currentState);
-        
+}
+
+class CharacterIdleState extends CharacterState {
+
+    //进入时设置Character类的变量
+    onEnter() {
+        this._character._ifidle = true;
     }
 
-    protected load(callback:Function):void {
-        var count:number = 0;
-        var self = this;
-        
-        var check = function () {
-            count++;
-            if (count == 2) {
-                callback.call(self);
+    //离开时同理
+    onExit() {
+        this._character._ifidle = false;
+    }
+
+}
+
+class CharacterMoveState extends CharacterState {
+
+    onEnter() {
+        this._character._ifmove = true;
+    }
+
+    onExit() {
+        this._character._ifmove = false;
+    }
+
+}
+
+
+class Character extends egret.DisplayObjectContainer {
+
+    _main: Main;
+    _stateMachine: StateMachine;
+    _body: egret.Bitmap;
+    _ifidle: boolean;
+    _ifmove: boolean;
+    _idleState: CharacterIdleState = new CharacterIdleState(this);
+    _moveState: CharacterMoveState = new CharacterMoveState(this);
+
+
+    constructor(main: Main) {
+        super();
+        this._main = main;
+        this._body = new egret.Bitmap;
+        this._body.texture = RES.getRes("1_png");
+        this._main.addChild(this._body);
+        this._body.anchorOffsetX = this._body.width / 3.5;
+        this._body.anchorOffsetY = this._body.width * 0.95;
+        this._stateMachine = new StateMachine();
+        this._body.x = this._main.stage.stageWidth * 0.15;
+        this._body.y = this._main.stage.stageHeight * 0.85;
+        this._ifidle = true;
+        this._ifmove = false;
+    }
+
+    public move(targetX: number, targetY: number, distance: number) {
+
+        //中止缓动动画，达到实现运动中更换目标点的目的
+        egret.Tween.removeTweens(this._body);
+
+        //触发状态机
+        this._stateMachine.setState(this._moveState);
+
+        //如果状态机将_ifwalk变量调整为true,则进入运动状态
+        if (this._ifmove) {
+            console.log("move");
+            if (targetX > this._body.x) {
+                this._body.skewY = 0;
             }
+            else {
+                this._body.skewY = 180;
+            }
+            this.startMove();
+            egret.Tween.get(this._body).to({ x: targetX, y: targetY }, 2000, egret.Ease.sineInOut).call(function () { this.idle() }, this);
+
         }
-        
-        var loader = new egret.URLLoader();
-        loader.addEventListener(egret.Event.COMPLETE, function loadOver(e) {
-            var loader = e.currentTarget;
-
-            this._mcTexture = loader.data;
-            
-            check();
-        }, this);
-        loader.dataFormat = egret.URLLoaderDataFormat.TEXTURE;
-        var request = new egret.URLRequest("resource/assets/mc/animation.png");
-        loader.load(request);
-        
-        var loader = new egret.URLLoader();
-        loader.addEventListener(egret.Event.COMPLETE, function loadOver(e) {
-            var loader = e.currentTarget;
-
-            this._mcData = JSON.parse(loader.data);
-            
-            check();
-        }, this);
-        loader.dataFormat = egret.URLLoaderDataFormat.TEXT;
-        var request = new egret.URLRequest("resource/assets/mc/animation.json");
-        loader.load(request);
     }
 
-    public Idle():void {
-        console.log("idle");
-        this.role.gotoAndStop(11);
-    }
+    public idle() {
 
-    public Move():void {
-        console.log("move");
-        this.role.gotoAndPlay(1);
-        this.role.addEventListener(egret.Event.COMPLETE,function(e:egret.Event):void{
-            this.role.gotoAndPlay(1);
-        },this);
-    }
+        this._stateMachine.setState(this._idleState);
 
-    public Transition(target:String){
-        this.currentState = target;
-        this.Polling(this.currentState);
-    }
-
-    public Polling(cur:String):void{
-        switch(this.currentState){
-            case "STATE_IDLE":
-                this.Idle();
-                break;
-            case "STATE_MOVEMENT":
-                this.Move();
-                break;
-            default:
-                break;
+        //如果状态机将_ifidle变量调整为true,则进入停止状态
+        if (this._ifidle) {
+            console.log("idle");
+            this.startidle();
         }
+    }
+
+    //播放运动动画
+    public startMove() {
+        var list = ["1_png", "2_png", "3_png", "4_png", "5_png", "6_png", "7_png", "8_png", "9_png", "10_png", "11_png", "12_png", "13_png", "14_png", "15_png", "16_png", "17_png", "18_png", "19_png", "20_png", "21_png", "22_png", "23_png", "24_png", "25_png", "26_png"];
+        var count = -1;
+
+        //循环执行
+        egret.Ticker.getInstance().register(() => {
+
+            if (this._ifmove) {
+                count = count + 0.5;
+                if (count >= list.length) {
+                    count = 0;
+                }
+
+                this._body.texture = RES.getRes(list[Math.floor(count)]);
+            }
+
+        }, this);
+
+    }
+
+    public startidle() {
+
+        this._body.texture = RES.getRes("1_png");
 
     }
 
