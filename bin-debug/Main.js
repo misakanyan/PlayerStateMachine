@@ -212,7 +212,7 @@ var Character = (function (_super) {
         this._body.anchorOffsetY = this._body.width * 0.95;
         this._stateMachine = new StateMachine();
         this._body.x = this._main.stage.stageWidth * 0.15;
-        this._body.y = this._main.stage.stageHeight * 0.9;
+        this._body.y = this._main.stage.stageHeight * 0.85;
         this._ifidle = true;
         this._ifmove = false;
     }

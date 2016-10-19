@@ -230,7 +230,6 @@ class Character extends egret.DisplayObjectContainer {
     _idleState: CharacterIdleState = new CharacterIdleState(this);
     _moveState: CharacterMoveState = new CharacterMoveState(this);
 
-
     constructor(main: Main) {
         super();
         this._main = main;
